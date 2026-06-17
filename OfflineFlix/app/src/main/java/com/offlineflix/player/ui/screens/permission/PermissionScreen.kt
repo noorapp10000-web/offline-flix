@@ -49,21 +49,13 @@ fun PermissionScreen(onPermissionsGranted: () -> Unit) {
     )
 
     fun checkAllPermissions(): Boolean {
-        val storageOk = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Environment.isExternalStorageManager()
-        } else {
-            context.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
-                android.content.pm.PackageManager.PERMISSION_GRANTED
+        // Android 11+: MANAGE_EXTERNAL_STORAGE covers everything including media
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            return Environment.isExternalStorageManager()
         }
-
-        val mediaOk = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.checkSelfPermission(Manifest.permission.READ_MEDIA_VIDEO) ==
-                android.content.pm.PackageManager.PERMISSION_GRANTED &&
-            context.checkSelfPermission(Manifest.permission.READ_MEDIA_AUDIO) ==
-                android.content.pm.PackageManager.PERMISSION_GRANTED
-        } else true
-
-        return storageOk && mediaOk
+        // Android 10 and below
+        return context.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
+            android.content.pm.PackageManager.PERMISSION_GRANTED
     }
 
     LaunchedEffect(Unit) {

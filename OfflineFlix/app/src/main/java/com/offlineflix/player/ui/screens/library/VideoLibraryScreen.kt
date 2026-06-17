@@ -41,6 +41,7 @@ fun VideoLibraryScreen(
     var showFilterMenu by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
+    Box(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier.fillMaxSize().background(NetflixBlack)
     ) {
@@ -213,6 +214,26 @@ fun VideoLibraryScreen(
         }
     }
 
+    // زر إعادة المسح العائم
+    FloatingActionButton(
+        onClick = { if (!uiState.isScanning) viewModel.rescan() },
+        modifier = Modifier
+            .align(Alignment.BottomEnd)
+            .padding(bottom = 88.dp, end = 16.dp),
+        containerColor = NetflixRed,
+        contentColor = Color.White
+    ) {
+        if (uiState.isScanning) {
+            CircularProgressIndicator(
+                color = Color.White,
+                modifier = Modifier.size(24.dp),
+                strokeWidth = 2.dp
+            )
+        } else {
+            Icon(Icons.Default.Refresh, contentDescription = "إعادة المسح")
+        }
+    }
+
     // قائمة الفرز
     if (showSortMenu) {
         AlertDialog(
@@ -238,6 +259,7 @@ fun VideoLibraryScreen(
             },
             confirmButton = {}
         )
+    }
     }
 }
 

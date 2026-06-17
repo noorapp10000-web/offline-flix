@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.offlineflix.player.data.models.VideoEntity
 import com.offlineflix.player.data.repository.VideoRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -16,7 +17,8 @@ data class VideoLibraryUiState(
     val isGridView: Boolean = true,
     val isMultiSelectMode: Boolean = false,
     val selectedIds: Set<Long> = emptySet(),
-    val searchQuery: String = ""
+    val searchQuery: String = "",
+    val isScanning: Boolean = false
 )
 
 /**
@@ -119,6 +121,18 @@ class VideoLibraryViewModel @Inject constructor(
                 videoRepository.moveToTrash(id)
             }
             _uiState.update { it.copy(selectedIds = emptySet(), isMultiSelectMode = false) }
+        }
+    }
+
+    fun rescan() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _uiState.update { it.copy(isScanning = true) }
+            try {
+                videoRepository.scanAllMedia()
+            } finally {
+                _uiState.update { it.copy(isScanning = false) }
+                loadVideos()
+            }
         }
     }
 }
