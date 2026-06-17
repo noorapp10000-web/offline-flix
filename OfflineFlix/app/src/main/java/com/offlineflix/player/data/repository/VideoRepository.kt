@@ -11,7 +11,9 @@ import android.os.Environment
 import android.provider.MediaStore
 import com.offlineflix.player.data.local.db.dao.VideoDao
 import com.offlineflix.player.data.local.db.dao.FolderDao
+import com.offlineflix.player.data.local.db.dao.TrashDao
 import com.offlineflix.player.data.models.FolderEntity
+import com.offlineflix.player.data.models.TrashEntity
 import com.offlineflix.player.data.models.VideoEntity
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +30,8 @@ import javax.inject.Singleton
 class VideoRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val videoDao: VideoDao,
-    private val folderDao: FolderDao
+    private val folderDao: FolderDao,
+    private val trashDao: TrashDao
 ) {
 
     // ==================== قراءة البيانات ====================
@@ -252,8 +255,21 @@ class VideoRepository @Inject constructor(
     suspend fun updateNotes(id: Long, notes: String) = videoDao.updateNotes(id, notes)
     suspend fun toggleFavorite(id: Long, isFavorite: Boolean) = videoDao.updateFavorite(id, isFavorite)
     suspend fun renameVideo(id: Long, newName: String) = videoDao.updateDisplayName(id, newName)
-    suspend fun moveToTrash(id: Long) = videoDao.moveToTrash(id, System.currentTimeMillis())
+    suspend fun moveToTrash(id: Long) {
+        val video = videoDao.getById(id) ?: return
+        trashDao.insertTrash(TrashEntity(
+            originalPath = video.path,
+            name = video.name,
+            size = video.size,
+            type = File(video.path).extension.ifEmpty { "mp4" },
+            thumbnailPath = video.thumbnailPath
+        ))
+        videoDao.moveToTrash(id, System.currentTimeMillis())
+    }
+
     suspend fun restoreFromTrash(id: Long) = videoDao.restoreFromTrash(id)
+
+    suspend fun addVideo(video: VideoEntity): Long = videoDao.insert(video)
 
     /**
      * كشف الملفات المكررة بالحجم والاسم

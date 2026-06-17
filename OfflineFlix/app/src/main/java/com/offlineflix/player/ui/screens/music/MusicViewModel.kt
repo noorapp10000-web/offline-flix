@@ -347,6 +347,33 @@ class MusicViewModel @Inject constructor(
         )
     }
 
+    fun deleteTrack(id: Long) {
+        viewModelScope.launch {
+            audioRepository.moveToTrash(id)
+        }
+    }
+
+    fun addAudioManually(uri: android.net.Uri) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val uriStr = uri.toString()
+            val lastSeg = uri.lastPathSegment ?: "audio_${System.currentTimeMillis()}.mp3"
+            val fileName = lastSeg.substringAfterLast("/")
+            audioRepository.addAudio(
+                com.offlineflix.player.data.models.AudioEntity(
+                    path = uriStr,
+                    name = fileName,
+                    title = fileName.substringBeforeLast(".").ifEmpty { "أغنية" },
+                    artist = "فنان غير معروف",
+                    album = "ألبوم غير معروف",
+                    size = 0L,
+                    duration = 0L,
+                    dateAdded = System.currentTimeMillis(),
+                    folderPath = ""
+                )
+            )
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         player.release()

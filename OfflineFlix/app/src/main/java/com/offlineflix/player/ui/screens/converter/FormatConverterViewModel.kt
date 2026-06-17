@@ -59,6 +59,15 @@ class FormatConverterViewModel @Inject constructor(
         val type = getFileType(ext)
         val codecs = getAvailableCodecs(ext)
 
+        // استخراج مدة الملف الحقيقية
+        inputDuration = try {
+            val retriever = android.media.MediaMetadataRetriever()
+            retriever.setDataSource(context, uri)
+            val dur = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong() ?: 0L
+            retriever.release()
+            dur
+        } catch (_: Exception) { 0L }
+
         _uiState.update {
             it.copy(
                 inputFile = uri.toString(),
@@ -67,9 +76,12 @@ class FormatConverterViewModel @Inject constructor(
                 detectedFormat = ext.uppercase(),
                 availableCodecs = codecs,
                 selectedCodec = codecs.firstOrNull() ?: "",
-                isComplete = false
+                isComplete = false,
+                error = ""
             )
         }
+
+        estimateOutputSize()
     }
 
     fun setOutputFormat(format: String) {

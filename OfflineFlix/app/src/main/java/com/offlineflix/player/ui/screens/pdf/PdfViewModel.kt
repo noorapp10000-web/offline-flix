@@ -5,9 +5,12 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.net.Uri
 import com.offlineflix.player.data.local.db.dao.PdfDao
+import com.offlineflix.player.data.local.db.dao.TrashDao
 import com.offlineflix.player.data.models.PdfBookmarkEntity
 import com.offlineflix.player.data.models.PdfEntity
+import com.offlineflix.player.data.models.TrashEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -33,7 +36,8 @@ data class PdfUiState(
 @HiltViewModel
 class PdfViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val pdfDao: PdfDao
+    private val pdfDao: PdfDao,
+    private val trashDao: TrashDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PdfUiState())
@@ -91,6 +95,39 @@ class PdfViewModel @Inject constructor(
     }
 
     fun searchInPdf(query: String) = _uiState.update { it.copy(searchQuery = query) }
+
+    fun moveToTrash(id: Long) = viewModelScope.launch {
+        val pdf = pdfDao.getById(id) ?: return@launch
+        trashDao.insertTrash(TrashEntity(
+            originalPath = pdf.path,
+            name = pdf.name,
+            size = pdf.size,
+            type = "pdf"
+        ))
+        pdfDao.moveToTrash(id)
+    }
+
+    fun addPdfManually(uri: Uri) = viewModelScope.launch(Dispatchers.IO) {
+        val fileName = try {
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val nameIdx = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    if (nameIdx >= 0) cursor.getString(nameIdx) else null
+                } else null
+            }
+        } catch (_: Exception) { null } ?: "document_${System.currentTimeMillis()}.pdf"
+
+        val size = try {
+            context.contentResolver.openFileDescriptor(uri, "r")?.use { it.statSize } ?: 0L
+        } catch (_: Exception) { 0L }
+
+        pdfDao.insert(PdfEntity(
+            path = uri.toString(),
+            name = fileName,
+            size = size,
+            dateAdded = System.currentTimeMillis()
+        ))
+    }
 
     /** مسح كل ملفات PDF */
     suspend fun scanAllPdfs(): Int = withContext(Dispatchers.IO) {

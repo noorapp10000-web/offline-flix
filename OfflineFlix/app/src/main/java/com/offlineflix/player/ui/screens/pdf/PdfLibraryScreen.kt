@@ -1,5 +1,8 @@
 package com.offlineflix.player.ui.screens.pdf
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -21,9 +24,6 @@ import com.offlineflix.player.data.models.PdfEntity
 import com.offlineflix.player.ui.theme.*
 import com.offlineflix.player.utils.formatSize
 
-/**
- * شاشة مكتبة PDF
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PdfLibraryScreen(
@@ -33,43 +33,72 @@ fun PdfLibraryScreen(
     val uiState by viewModel.uiState.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
 
-    Column(modifier = Modifier.fillMaxSize().background(NetflixBlack)) {
-        // شريط بحث
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it; viewModel.search(it) },
-            placeholder = { Text("ابحث في ملفات PDF...", color = Color.White.copy(alpha = 0.5f)) },
-            leadingIcon = { Icon(Icons.Default.Search, null, tint = Color.White.copy(alpha = 0.5f)) },
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
-                focusedBorderColor = NetflixRed, unfocusedBorderColor = NetflixMediumGray,
-                cursorColor = NetflixRed, focusedContainerColor = NetflixDarkGray, unfocusedContainerColor = NetflixDarkGray
-            ),
-            shape = RoundedCornerShape(12.dp), singleLine = true
-        )
+    val addPdfLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { viewModel.addPdfManually(it) }
+    }
 
-        if (uiState.pdfs.isEmpty()) {
-            Box(Modifier.fillMaxSize(), Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.PictureAsPdf, null, tint = NetflixRed, modifier = Modifier.size(64.dp))
-                    Spacer(Modifier.height(16.dp))
-                    Text("لا توجد ملفات PDF", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    Text("سيجلب التطبيق ملفات PDF من كل التطبيقات تلقائياً", color = Color.White.copy(alpha = 0.5f), fontSize = 13.sp)
+    Box(modifier = Modifier.fillMaxSize().background(NetflixBlack)) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it; viewModel.search(it) },
+                placeholder = { Text("ابحث في ملفات PDF...", color = Color.White.copy(alpha = 0.5f)) },
+                leadingIcon = { Icon(Icons.Default.Search, null, tint = Color.White.copy(alpha = 0.5f)) },
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                    focusedBorderColor = NetflixRed, unfocusedBorderColor = NetflixMediumGray,
+                    cursorColor = NetflixRed, focusedContainerColor = NetflixDarkGray, unfocusedContainerColor = NetflixDarkGray
+                ),
+                shape = RoundedCornerShape(12.dp), singleLine = true
+            )
+
+            if (uiState.pdfs.isEmpty()) {
+                Box(Modifier.fillMaxSize(), Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.PictureAsPdf, null, tint = NetflixRed, modifier = Modifier.size(64.dp))
+                        Spacer(Modifier.height(16.dp))
+                        Text("لا توجد ملفات PDF", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "اضغط + لإضافة PDF أو افتح شاشة المسح",
+                            color = Color.White.copy(alpha = 0.5f),
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 88.dp)
+                ) {
+                    items(uiState.pdfs, key = { it.id }) { pdf ->
+                        PdfListItem(
+                            pdf = pdf,
+                            onClick = { onPdfClick(pdf.id) },
+                            onDelete = { viewModel.moveToTrash(pdf.id) }
+                        )
+                    }
                 }
             }
-        } else {
-            LazyColumn(contentPadding = PaddingValues(8.dp)) {
-                items(uiState.pdfs, key = { it.id }) { pdf ->
-                    PdfListItem(pdf = pdf, onClick = { onPdfClick(pdf.id) })
-                }
-            }
+        }
+
+        FloatingActionButton(
+            onClick = { addPdfLauncher.launch("application/pdf") },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(bottom = 16.dp, end = 16.dp),
+            containerColor = NetflixRed,
+            contentColor = Color.White
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "إضافة PDF")
         }
     }
 }
 
 @Composable
-fun PdfListItem(pdf: PdfEntity, onClick: () -> Unit) {
+fun PdfListItem(pdf: PdfEntity, onClick: () -> Unit, onDelete: (() -> Unit)? = null) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = NetflixDarkGray),
@@ -93,6 +122,11 @@ fun PdfListItem(pdf: PdfEntity, onClick: () -> Unit) {
                 }
             }
             if (pdf.isFavorite) Icon(Icons.Default.Star, null, tint = NetflixYellow, modifier = Modifier.size(20.dp))
+            if (onDelete != null) {
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, null, tint = NetflixRed.copy(alpha = 0.7f), modifier = Modifier.size(20.dp))
+                }
+            }
         }
     }
 }

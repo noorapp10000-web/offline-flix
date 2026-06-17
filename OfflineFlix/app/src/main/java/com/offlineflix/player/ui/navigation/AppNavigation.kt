@@ -219,7 +219,12 @@ fun AppNavigation(intentData: Uri?) {
                     onOpenConverter = { navController.navigate(Routes.FORMAT_CONVERTER) },
                     onOpenFileManager = { navController.navigate(Routes.FILE_MANAGER) },
                     onOpenDeviceTools = { navController.navigate(Routes.DEVICE_TOOLS) },
-                    onOpenGifViewer = { navController.navigate(Routes.GIF_VIEWER) }
+                    onOpenGifViewer = { navController.navigate(Routes.GIF_VIEWER) },
+                    onRescan = {
+                        navController.navigate(Routes.SCANNING) {
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
 

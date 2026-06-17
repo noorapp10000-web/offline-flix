@@ -1,5 +1,6 @@
 package com.offlineflix.player.ui.screens.library
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.offlineflix.player.data.models.VideoEntity
@@ -133,6 +134,22 @@ class VideoLibraryViewModel @Inject constructor(
                 _uiState.update { it.copy(isScanning = false) }
                 loadVideos()
             }
+        }
+    }
+
+    fun addVideoManually(uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val uriStr = uri.toString()
+            val lastSeg = uri.lastPathSegment ?: "video_${System.currentTimeMillis()}.mp4"
+            val displayName = lastSeg.substringAfterLast("/").substringBeforeLast(".")
+            val video = VideoEntity(
+                path = uriStr,
+                name = lastSeg.substringAfterLast("/"),
+                displayName = displayName.ifEmpty { "فيديو" },
+                size = 0,
+                dateAdded = System.currentTimeMillis()
+            )
+            videoRepository.addVideo(video)
         }
     }
 }

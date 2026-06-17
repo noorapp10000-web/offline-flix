@@ -1,5 +1,8 @@
 package com.offlineflix.player.ui.screens.music
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -37,6 +40,12 @@ import com.offlineflix.player.utils.formatDuration
 fun MusicScreen(viewModel: MusicViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
     var showFullPlayer by remember { mutableStateOf(false) }
+
+    val addAudioLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { viewModel.addAudioManually(it) }
+    }
 
     Box(
         modifier = Modifier
@@ -114,6 +123,23 @@ fun MusicScreen(viewModel: MusicViewModel = hiltViewModel()) {
                     onEqualizer = viewModel::openEqualizer,
                     onAddToPlaylist = viewModel::addToPlaylist
                 )
+            }
+        }
+
+        // ==================== زر إضافة صوت ====================
+        if (!showFullPlayer) {
+            FloatingActionButton(
+                onClick = { addAudioLauncher.launch("audio/*") },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(
+                        bottom = if (uiState.currentTrack != null) 88.dp else 16.dp,
+                        end = 16.dp
+                    ),
+                containerColor = SpotifyGreen,
+                contentColor = Color.White
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "إضافة صوت")
             }
         }
 

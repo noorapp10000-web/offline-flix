@@ -27,8 +27,33 @@ fun SettingsScreen(
     onOpenConverter: () -> Unit,
     onOpenFileManager: () -> Unit,
     onOpenDeviceTools: () -> Unit,
-    onOpenGifViewer: () -> Unit = {}
+    onOpenGifViewer: () -> Unit = {},
+    onRescan: () -> Unit = {}
 ) {
+    var showAboutDialog by remember { mutableStateOf(false) }
+
+    if (showAboutDialog) {
+        AlertDialog(
+            onDismissRequest = { showAboutDialog = false },
+            containerColor = NetflixDarkGray,
+            title = { Text("عن التطبيق", color = Color.White, fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                    Text("OfflineFlix", color = NetflixRed, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
+                    Text("الإصدار: v1.0.0", color = Color.White, fontSize = 14.sp)
+                    Text("100% أوفلاين — لا حاجة للإنترنت", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp)
+                    Spacer(Modifier.height(4.dp))
+                    Text("مشغل وسائط متكامل يدعم الفيديو والأغاني وملفات PDF.", color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAboutDialog = false }) {
+                    Text("حسناً", color = NetflixRed)
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier.fillMaxSize().background(NetflixBlack).verticalScroll(rememberScrollState())
     ) {
@@ -57,7 +82,7 @@ fun SettingsScreen(
 
         // ==================== قسم الملفات ====================
         SettingsSection(title = "إدارة الملفات") {
-            SettingsItem(Icons.Default.Refresh, "إعادة مسح الملفات", "مسح الجهاز بحثاً عن ملفات جديدة") {}
+            SettingsItem(Icons.Default.Refresh, "إعادة مسح الملفات", "مسح الجهاز بحثاً عن ملفات جديدة", onClick = onRescan)
             SettingsItem(Icons.Default.Delete, "سلة المحذوفات", "استعادة أو حذف الملفات المحذوفة", onClick = onOpenTrash)
             SettingsItem(Icons.Default.FolderOpen, "مدير الملفات", onClick = onOpenFileManager)
             SettingsItem(Icons.Default.FindReplace, "كاشف التكرار", "اعثر على الفيديوهات المكررة", onClick = onOpenDeviceTools)
@@ -130,7 +155,7 @@ fun SettingsScreen(
         // ==================== قسم المساعدة ====================
         SettingsSection(title = "المساعدة") {
             SettingsItem(Icons.Default.Help, "طريقة استخدام التطبيق", "شرح كامل بالعربي", onClick = onOpenHowTo)
-            SettingsItem(Icons.Default.Info, "عن التطبيق", "OfflineFlix v1.0.0 - 100% أوفلاين") {}
+            SettingsItem(Icons.Default.Info, "عن التطبيق", "OfflineFlix v1.0.0 - 100% أوفلاين") { showAboutDialog = true }
         }
 
         Spacer(Modifier.height(32.dp))

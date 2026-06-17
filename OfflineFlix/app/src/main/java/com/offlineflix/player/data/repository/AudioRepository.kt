@@ -5,6 +5,7 @@ import android.os.Build
 import android.provider.MediaStore
 import com.offlineflix.player.data.local.db.dao.AudioDao
 import com.offlineflix.player.data.local.db.dao.PlaylistDao
+import com.offlineflix.player.data.local.db.dao.TrashDao
 import com.offlineflix.player.data.models.*
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -21,7 +22,8 @@ import javax.inject.Singleton
 class AudioRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val audioDao: AudioDao,
-    private val playlistDao: PlaylistDao
+    private val playlistDao: PlaylistDao,
+    private val trashDao: TrashDao
 ) {
     fun getAllTracks(): Flow<List<AudioEntity>> = audioDao.getAllTracks()
     fun getAllAlbums(): Flow<List<String>> = audioDao.getAllAlbums()
@@ -126,6 +128,19 @@ class AudioRepository @Inject constructor(
 
     suspend fun toggleFavorite(id: Long, isFavorite: Boolean) = audioDao.updateFavorite(id, isFavorite)
     suspend fun updateLastPlayed(id: Long) = audioDao.updateLastPlayed(id, System.currentTimeMillis())
+
+    suspend fun moveToTrash(id: Long) {
+        val audio = audioDao.getById(id) ?: return
+        trashDao.insertTrash(TrashEntity(
+            originalPath = audio.path,
+            name = audio.name,
+            size = audio.size,
+            type = File(audio.path).extension.ifEmpty { "mp3" }
+        ))
+        audioDao.moveToTrash(id)
+    }
+
+    suspend fun addAudio(audio: AudioEntity): Long = audioDao.insert(audio)
 
     // قوائم التشغيل
     suspend fun createPlaylist(name: String): Long = playlistDao.insertPlaylist(PlaylistEntity(name = name))

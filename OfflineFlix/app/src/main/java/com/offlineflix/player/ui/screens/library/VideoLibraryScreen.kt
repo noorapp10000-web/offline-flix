@@ -1,5 +1,8 @@
 package com.offlineflix.player.ui.screens.library
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -40,6 +43,12 @@ fun VideoLibraryScreen(
     var showSortMenu by remember { mutableStateOf(false) }
     var showFilterMenu by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+
+    val addVideoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { viewModel.addVideoManually(it) }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
     Column(
@@ -212,6 +221,18 @@ fun VideoLibraryScreen(
                 }
             }
         }
+    }
+
+    // زر إضافة فيديو عائم
+    FloatingActionButton(
+        onClick = { addVideoLauncher.launch("video/*") },
+        modifier = Modifier
+            .align(Alignment.BottomStart)
+            .padding(bottom = 88.dp, start = 16.dp),
+        containerColor = SpotifyGreen,
+        contentColor = Color.White
+    ) {
+        Icon(Icons.Default.Add, contentDescription = "إضافة فيديو")
     }
 
     // زر إعادة المسح العائم

@@ -50,4 +50,10 @@ interface PdfDao {
 
     @Query("SELECT path FROM pdf_files WHERE isDeleted = 0")
     suspend fun getAllPaths(): List<String>
+
+    @Query("UPDATE pdf_files SET isDeleted = 1 WHERE id = :id")
+    suspend fun moveToTrash(id: Long)
+
+    @Query("SELECT * FROM pdf_files WHERE path = :path LIMIT 1")
+    suspend fun getByPathAny(path: String): PdfEntity?
 }
