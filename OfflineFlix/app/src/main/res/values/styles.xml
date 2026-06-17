@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- الثيم الرئيسي -->
+    <style name="Theme.OfflineFlix" parent="Theme.Material3.DynamicColors.DayNight">
+        <item name="colorPrimary">#E50914</item>
+        <item name="colorPrimaryVariant">#B20710</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">#1DB954</item>
+        <item name="colorOnSecondary">#000000</item>
+        <item name="android:colorBackground">#141414</item>
+        <item name="colorSurface">#181818</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+        <item name="android:windowBackground">#141414</item>
+        <item name="android:statusBarColor">#00000000</item>
+        <item name="android:navigationBarColor">#141414</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
+    <!-- ثيم Splash Screen -->
+    <style name="Theme.OfflineFlix.SplashScreen" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#141414</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenAnimationDuration">500</item>
+        <item name="postSplashScreenTheme">@style/Theme.OfflineFlix</item>
+    </style>
+</resources>

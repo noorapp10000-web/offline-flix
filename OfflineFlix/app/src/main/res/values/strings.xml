@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OfflineFlix</string>
+    <string name="app_description">مشغل الوسائط الأوفلاين الكامل</string>
+    
+    <!-- الصلاحيات -->
+    <string name="permission_storage">الوصول للتخزين</string>
+    <string name="permission_media">الوصول للوسائط</string>
+    <string name="permission_notifications">الإشعارات</string>
+    
+    <!-- المشغل -->
+    <string name="play">تشغيل</string>
+    <string name="pause">إيقاف</string>
+    <string name="next">التالي</string>
+    <string name="previous">السابق</string>
+    <string name="seek_forward">تقديم</string>
+    <string name="seek_backward">تأخير</string>
+    
+    <!-- الإشعارات -->
+    <string name="notification_playing">يُشغل الآن</string>
+    <string name="notification_converting">جاري التحويل</string>
+    <string name="notification_scanning">مسح الملفات</string>
+    
+    <!-- السلة -->
+    <string name="trash_empty">سلة المحذوفات فارغة</string>
+    <string name="restore">استعادة</string>
+    <string name="delete_permanently">حذف نهائي</string>
+    
+    <!-- عام -->
+    <string name="ok">موافق</string>
+    <string name="cancel">إلغاء</string>
+    <string name="back">رجوع</string>
+    <string name="search">بحث</string>
+    <string name="loading">جاري التحميل...</string>
+    <string name="error">حدث خطأ</string>
+    <string name="success">نجح!</string>
+    <string name="offline_only">100% أوفلاين - لا إنترنت مطلوب</string>
+</resources>

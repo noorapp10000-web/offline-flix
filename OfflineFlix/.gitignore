@@ -1,0 +1,22 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# مفاتيح التوقيع
+*.jks
+*.keystore
+keystore.properties
+
+# APKs (لا نرفعها على Git)
+*.apk
+*.aab
+
+# ملفات النظام
+Thumbs.db
