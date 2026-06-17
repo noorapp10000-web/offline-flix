@@ -1,0 +1,32 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "h4qXQl96UBe7gRWhWG_yi"
+uri = "file://OfflineFlix/ic_launcher_1024.png"
+type = "image"
+title = "Logo 1024×1024 (Play Store)"
+
+[[outputs]]
+id = "Zkp6g0drw8aehdBrmsyaZ"
+uri = "file://OfflineFlix/ic_launcher_512.png"
+type = "image"
+title = "Logo 512×512"
+
+[[outputs]]
+id = "wGTlg2I2TU-Gl0j_SJkxz"
+uri = "file://OfflineFlix/ic_launcher_192.png"
+type = "image"
+title = "Logo 192×192 (xxxhdpi)"
+
+[[outputs]]
+id = "PXCpry_KCsQRCf7hmNpgu"
+uri = "file://OfflineFlix/ic_launcher_144.png"
+type = "image"
+title = "Logo 144×144 (xxhdpi)"
+
+[[outputs]]
+id = "hT-hYFZLou02LKioaubfT"
+uri = "file://OfflineFlix/ic_launcher_96.png"
+type = "image"
+title = "Logo 96×96 (xhdpi)"

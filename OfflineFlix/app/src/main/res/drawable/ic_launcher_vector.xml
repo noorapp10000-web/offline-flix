@@ -1,0 +1,55 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- خلفية داكنة -->
+    <path
+        android:pathData="M54,54m-54,0a54,54 0,1 1,108 0a54,54 0,1 1,-108 0"
+        android:fillColor="#0D0D1A"/>
+
+    <!-- الحلقة الخارجية — النصف الأيسر (cyan) -->
+    <path
+        android:pathData="M54,8.5 A45.5,45.5 0 0,0 54,99.5"
+        android:strokeColor="#00C4FF"
+        android:strokeWidth="15"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"/>
+
+    <!-- الحلقة الخارجية — النصف الأيمن (purple) -->
+    <path
+        android:pathData="M54,8.5 A45.5,45.5 0 0,1 54,99.5"
+        android:strokeColor="#7B2FFF"
+        android:strokeWidth="15"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"/>
+
+    <!-- حلقة كاملة بتدرج عبر group -->
+    <group>
+        <clip-path
+            android:pathData="M54,54m-46,0a46,46 0,1 1,92 0a46,46 0,1 1,-92 0"/>
+        <path
+            android:pathData="M54,54m-38,0a38,38 0,1 1,76 0a38,38 0,1 1,-76 0"
+            android:fillColor="#00000000"
+            android:strokeWidth="16">
+            <aapt:attr name="android:strokeColor">
+                <gradient
+                    android:startX="8" android:startY="54"
+                    android:endX="100" android:endY="54"
+                    android:type="linear">
+                    <item android:offset="0" android:color="#FF00C4FF"/>
+                    <item android:offset="0.5" android:color="#FF7B2FFF"/>
+                    <item android:offset="1" android:color="#FF00C4FF"/>
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
+
+    <!-- مثلث Play (أبيض) -->
+    <path
+        android:pathData="M44,38 L44,70 L74,54 Z"
+        android:fillColor="#FFFFFF"/>
+
+</vector>

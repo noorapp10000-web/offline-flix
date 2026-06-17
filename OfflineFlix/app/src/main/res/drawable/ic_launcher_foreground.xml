@@ -1,63 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- شعار OfflineFlix - تصميم احترافي: شريط فيلم + زر تشغيل + أيقونة أوفلاين -->
+<!-- شعار OfflineFlix — حرف O + مثلث Play بتدرج Cyan → Purple -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- خلفية دائرة حمراء Netflix -->
-    <path
-        android:fillColor="#E50914"
-        android:pathData="M54,54m-44,0a44,44 0,1 1,88 0a44,44 0,1 1,-88 0" />
+    <!-- الحلقة (حرف O) بتدرج لوني Cyan → Purple -->
+    <group>
+        <clip-path
+            android:pathData="M54,54m-46,0a46,46 0,1 1,92 0a46,46 0,1 1,-92 0"/>
+        <path
+            android:pathData="M54,54m-38,0a38,38 0,1 1,76 0a38,38 0,1 1,-76 0"
+            android:fillColor="#00000000"
+            android:strokeWidth="16">
+            <aapt:attr name="android:strokeColor">
+                <gradient
+                    android:startX="8"
+                    android:startY="20"
+                    android:endX="100"
+                    android:endY="88"
+                    android:type="linear">
+                    <item android:offset="0" android:color="#FF00C4FF"/>
+                    <item android:offset="1" android:color="#FF7B2FFF"/>
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
 
-    <!-- إطار شريط الفيلم الأبيض -->
+    <!-- مثلث Play أبيض -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M22,36 L22,72 L86,72 L86,36 Z" />
-
-    <!-- ثقوب شريط الفيلم العليا (داكنة) -->
-    <path
-        android:fillColor="#E50914"
-        android:pathData="M26,36 L26,38.5 L30,38.5 L30,36 Z
-                         M34,36 L34,38.5 L38,38.5 L38,36 Z
-                         M42,36 L42,38.5 L46,38.5 L46,36 Z
-                         M50,36 L50,38.5 L54,38.5 L54,36 Z
-                         M58,36 L58,38.5 L62,38.5 L62,36 Z
-                         M66,36 L66,38.5 L70,38.5 L70,36 Z
-                         M74,36 L74,38.5 L78,38.5 L78,36 Z" />
-
-    <!-- ثقوب شريط الفيلم السفلية (داكنة) -->
-    <path
-        android:fillColor="#E50914"
-        android:pathData="M26,69.5 L26,72 L30,72 L30,69.5 Z
-                         M34,69.5 L34,72 L38,72 L38,69.5 Z
-                         M42,69.5 L42,72 L46,72 L46,69.5 Z
-                         M50,69.5 L50,72 L54,72 L54,69.5 Z
-                         M58,69.5 L58,72 L62,72 L62,69.5 Z
-                         M66,69.5 L66,72 L70,72 L70,69.5 Z
-                         M74,69.5 L74,72 L78,72 L78,69.5 Z" />
-
-    <!-- المنطقة الداكنة وسط شريط الفيلم -->
-    <path
-        android:fillColor="#141414"
-        android:pathData="M22,40 L86,40 L86,68 L22,68 Z" />
-
-    <!-- مثلث التشغيل الأبيض الكبير -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M44,46 L44,62 L64,54 Z" />
-
-    <!-- نقطة حمراء صغيرة (مؤشر Offline/Download) -->
-    <path
-        android:fillColor="#E50914"
-        android:pathData="M72,44m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0" />
-
-    <!-- علامة التوقف الخاصة بـ Offline داخل النقطة -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="1.2"
-        android:pathData="M72,41 L72,46 M70.5,46.5 L72,48 L73.5,46.5" />
+        android:pathData="M44,38 L44,70 L74,54 Z"
+        android:fillColor="#FFFFFF"/>
 
 </vector>

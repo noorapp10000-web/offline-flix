@@ -1,6 +1,8 @@
 package com.offlineflix.player.ui
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,15 +15,18 @@ import dagger.hilt.android.AndroidEntryPoint
 import com.offlineflix.player.ui.navigation.AppNavigation
 import com.offlineflix.player.ui.theme.OfflineFlixTheme
 
-/**
- * النشاط الرئيسي للتطبيق
- */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // تفعيل Splash Screen (Android 12+)
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
+
+        var keepSplashVisible = true
+        Handler(Looper.getMainLooper()).postDelayed({
+            keepSplashVisible = false
+        }, 3000L)
+        splashScreen.setKeepOnScreenCondition { keepSplashVisible }
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
