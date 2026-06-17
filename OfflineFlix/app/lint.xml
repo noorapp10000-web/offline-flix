@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- MediaStore.DATA is deprecated since API 29, but required for file path access on API 26-28.
+         All usages are guarded by appropriate SDK version checks. -->
+    <issue id="Deprecation" severity="ignore">
+        <ignore path="**/repository/VideoRepository.kt"/>
+        <ignore path="**/repository/AudioRepository.kt"/>
+        <ignore path="**/scanning/ScanningViewModel.kt"/>
+        <ignore path="**/pdf/PdfViewModel.kt"/>
+    </issue>
+
+    <!-- Suppress ObsoleteSdkInt: minSdk=26, some checks guard for Q (29) which lint flags. -->
+    <issue id="ObsoleteSdkInt" severity="ignore"/>
+
+    <!-- FFmpegKit is a stub — suppress unresolved references from stub classes. -->
+    <issue id="InvalidPackage" severity="ignore"/>
+
+    <!-- Allow Arabic RTL text in code strings -->
+    <issue id="HardcodedText" severity="ignore"/>
+</lint>

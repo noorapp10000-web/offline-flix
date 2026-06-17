@@ -146,7 +146,8 @@ class VideoLibraryViewModel @Inject constructor(
                 path = uriStr,
                 name = lastSeg.substringAfterLast("/"),
                 displayName = displayName.ifEmpty { "فيديو" },
-                size = 0,
+                size = 0L,
+                duration = 0L,
                 dateAdded = System.currentTimeMillis()
             )
             videoRepository.addVideo(video)

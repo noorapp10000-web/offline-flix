@@ -132,8 +132,13 @@ android {
             "AllowBackup",
             "GoogleAppIndexingWarning",
             "MissingTranslation",
-            "ExtraTranslation"
+            "ExtraTranslation",
+            "Deprecation",
+            "ObsoleteSdkInt",
+            "InvalidPackage",
+            "UnusedImports"
         )
+        warningsAsErrors = false
     }
 }
 

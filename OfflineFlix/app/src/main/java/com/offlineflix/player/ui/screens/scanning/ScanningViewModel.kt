@@ -96,6 +96,7 @@ class ScanningViewModel @Inject constructor(
         }
     }
 
+    @Suppress("DEPRECATION")
     private suspend fun scanPdfs(): Int = withContext(Dispatchers.IO) {
         var count = 0
         try {
