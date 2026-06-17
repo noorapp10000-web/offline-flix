@@ -1,8 +1,9 @@
 package com.offlineflix.player.data.models
 
+import androidx.room.Embedded
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import androidx.room.Junction
+import androidx.room.PrimaryKey
 import androidx.room.Relation
 
 /**
@@ -42,7 +43,7 @@ data class PlaylistAudioCrossRef(
  * كيان قائمة تشغيل مع الأغاني
  */
 data class PlaylistWithAudio(
-    val playlist: PlaylistEntity,
+    @Embedded val playlist: PlaylistEntity,
     @Relation(
         parentColumn = "id",
         entityColumn = "id",
