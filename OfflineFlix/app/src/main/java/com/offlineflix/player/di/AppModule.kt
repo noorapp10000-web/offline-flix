@@ -2,6 +2,7 @@ package com.offlineflix.player.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.work.WorkManager
 import com.offlineflix.player.data.local.db.AppDatabase
 import com.offlineflix.player.data.local.db.dao.*
 import dagger.Module
@@ -37,4 +38,9 @@ object AppModule {
     @Provides fun providePdfDao(db: AppDatabase): PdfDao = db.pdfDao()
     @Provides fun provideFolderDao(db: AppDatabase): FolderDao = db.folderDao()
     @Provides fun provideTrashDao(db: AppDatabase): TrashDao = db.trashDao()
+
+    @Provides
+    @Singleton
+    fun provideWorkManager(@ApplicationContext context: Context): WorkManager =
+        WorkManager.getInstance(context)
 }
