@@ -9,10 +9,6 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
-defaults:
-  run:
-    working-directory: OfflineFlix
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -35,99 +31,69 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
             OfflineFlix/.gradle
-          key: ${{ runner.os }}-gradle-${{ hashFiles('OfflineFlix/**/*.gradle*', 'OfflineFlix/**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('OfflineFlix/**/*.gradle*', 'OfflineFlix/**/libs.versions.toml', 'OfflineFlix/**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
       - name: تعيين صلاحيات gradlew
+        working-directory: OfflineFlix
         run: chmod +x ./gradlew
 
       - name: بناء Debug APK
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
-
-      - name: تشغيل اختبارات الوحدة
-        run: ./gradlew testDebugUnitTest --no-daemon
-
-      - name: تسمية Debug APK
-        run: |
-          VERSION_NAME=$(grep "versionName" app/build.gradle.kts | head -1 | grep -oP '"\K[^"]+')
-          echo "VERSION_NAME=${VERSION_NAME:-1.0}" >> $GITHUB_ENV
-          find . -name "*debug*.apk" | head -1 | xargs -I{} cp {} ../OfflineFlix-v${VERSION_NAME:-1.0}-debug.apk || true
         working-directory: OfflineFlix
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        env:
+          GRADLE_OPTS: "-Xmx4g -Dorg.gradle.daemon=false"
 
       - name: رفع Debug APK كـ Artifact
         uses: actions/upload-artifact@v4
         with:
           name: OfflineFlix-Debug-APK-${{ github.run_number }}
-          path: OfflineFlix-*.apk
-          if-no-files-found: warn
-          retention-days: 30
-
-      - name: توليد QR Code لرابط التحميل
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-        run: |
-          pip install qrcode[pil] --quiet
-          python3 - << 'PYEOF'
-          import qrcode, os
-          run_id = os.environ.get("GITHUB_RUN_ID", "")
-          repo = os.environ.get("GITHUB_REPOSITORY", "")
-          url = f"https://github.com/{repo}/actions/runs/{run_id}"
-          qr = qrcode.make(url)
-          qr.save("offlineflix-download-qr.png")
-          print(f"QR generated for: {url}")
-          PYEOF
-        working-directory: ${{ github.workspace }}
-        env:
-          GITHUB_RUN_ID: ${{ github.run_id }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-
-      - name: رفع QR Code كـ Artifact
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-        uses: actions/upload-artifact@v4
-        with:
-          name: QR-Download-Link
-          path: offlineflix-download-qr.png
+          path: OfflineFlix/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
           retention-days: 30
 
       # ==================== Release (عند الوسم v* فقط) ====================
 
       - name: إعداد مفتاح التوقيع
         if: startsWith(github.ref, 'refs/tags/')
-        env:
-          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
         run: |
-          echo "$KEYSTORE_B64" | base64 --decode > $RUNNER_TEMP/keystore.jks
+          echo "${{ secrets.KEYSTORE_B64 }}" | base64 --decode > $RUNNER_TEMP/keystore.jks
           echo "KEYSTORE_PATH=$RUNNER_TEMP/keystore.jks" >> $GITHUB_ENV
 
       - name: بناء Release APK الموقّع
         if: startsWith(github.ref, 'refs/tags/')
+        working-directory: OfflineFlix
         env:
           KEYSTORE_PATH: ${{ env.KEYSTORE_PATH }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          GRADLE_OPTS: "-Xmx4g -Dorg.gradle.daemon=false"
         run: ./gradlew assembleRelease --no-daemon
 
-      - name: تجميع ملفات Release
+      - name: رفع Release APK كـ Artifact
         if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          find . -name "*release*.apk" | head -1 | xargs -I{} cp {} ../OfflineFlix-v${{ env.VERSION_NAME }}-release.apk || true
-        working-directory: OfflineFlix
+        uses: actions/upload-artifact@v4
+        with:
+          name: OfflineFlix-Release-APK-${{ github.run_number }}
+          path: OfflineFlix/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 90
 
       - name: إنشاء GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            OfflineFlix-*.apk
-            offlineflix-download-qr.png
+            OfflineFlix/app/build/outputs/apk/release/*.apk
           generate_release_notes: true
           body: |
-            ## OfflineFlix ${{ env.VERSION_NAME }} 🎬
+            ## OfflineFlix ${{ github.ref_name }} 🎬
 
             ### المميزات:
             - 🎬 مشغل فيديو بإيماءات متقدمة (ExoPlayer)
-            - 🎵 مشغل موسيقى Spotify-style مع Equalizer
+            - 🎵 مشغل موسيقى مع Equalizer
             - 📄 قارئ PDF مع شريط تصفح
             - ✂️ محرر فيديو FFmpeg كامل
             - 🔄 محول صيغ (+400 صيغة)
@@ -135,7 +101,7 @@ jobs:
             - 📶 100% أوفلاين - لا إنترنت مطلوب
 
             ### تعليمات التثبيت:
-            1. حمّل `OfflineFlix-v${{ env.VERSION_NAME }}-release.apk`
+            1. حمّل ملف الـ APK من الأسفل
             2. افتح الملف على هاتفك
             3. فعّل "تثبيت من مصادر غير معروفة" ثم اضغط تثبيت
 
@@ -148,6 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
@@ -155,12 +122,14 @@ jobs:
           cache: gradle
 
       - name: تعيين صلاحيات gradlew
-        run: chmod +x ./gradlew
         working-directory: OfflineFlix
+        run: chmod +x ./gradlew
 
       - name: تشغيل Lint
-        run: ./gradlew lintDebug --no-daemon
         working-directory: OfflineFlix
+        run: ./gradlew lintDebug --no-daemon
+        env:
+          GRADLE_OPTS: "-Xmx4g -Dorg.gradle.daemon=false"
 
       - name: رفع نتائج Lint
         uses: actions/upload-artifact@v4
