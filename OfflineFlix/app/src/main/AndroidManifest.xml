@@ -30,8 +30,7 @@
     <!-- صلاحية النافذة المنبثقة (Pop-up Player) -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
-    <!-- صلاحية إيقاف تعتيم الشاشة أثناء التشغيل -->
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- صلاحية إيقاف تعتيم الشاشة أثناء التشغيل (FLAG_KEEP_SCREEN_ON) -->
 
     <!-- USB OTG -->
     <uses-feature android:name="android.hardware.usb.host" android:required="false" />
