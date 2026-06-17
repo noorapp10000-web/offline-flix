@@ -25,6 +25,7 @@ import com.offlineflix.player.ui.screens.trash.TrashScreen
 import com.offlineflix.player.ui.screens.howto.HowToUseScreen
 import com.offlineflix.player.ui.screens.filemanager.FileManagerScreen
 import com.offlineflix.player.ui.screens.tools.DeviceToolsScreen
+import com.offlineflix.player.ui.screens.viewer.GifImageViewerScreen
 import com.offlineflix.player.ui.components.BottomNavBar
 import com.offlineflix.player.ui.components.StorageBar
 
@@ -45,6 +46,7 @@ object Routes {
     const val TRASH = "trash"
     const val HOW_TO_USE = "how_to_use"
     const val DEVICE_TOOLS = "device_tools"
+    const val GIF_VIEWER = "gif_viewer"
 
     fun videoPlayer(videoId: Long) = "video_player/$videoId"
     fun pdfReader(pdfId: Long) = "pdf_reader/$pdfId"
@@ -216,7 +218,8 @@ fun AppNavigation(intentData: Uri?) {
                     onOpenHowTo = { navController.navigate(Routes.HOW_TO_USE) },
                     onOpenConverter = { navController.navigate(Routes.FORMAT_CONVERTER) },
                     onOpenFileManager = { navController.navigate(Routes.FILE_MANAGER) },
-                    onOpenDeviceTools = { navController.navigate(Routes.DEVICE_TOOLS) }
+                    onOpenDeviceTools = { navController.navigate(Routes.DEVICE_TOOLS) },
+                    onOpenGifViewer = { navController.navigate(Routes.GIF_VIEWER) }
                 )
             }
 
@@ -230,6 +233,10 @@ fun AppNavigation(intentData: Uri?) {
 
             composable(Routes.DEVICE_TOOLS) {
                 DeviceToolsScreen(onBack = { navController.popBackStack() })
+            }
+
+            composable(Routes.GIF_VIEWER) {
+                GifImageViewerScreen(onBack = { navController.popBackStack() })
             }
         }
     }

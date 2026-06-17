@@ -193,9 +193,10 @@ dependencies {
     implementation(libs.hilt.work)
     ksp(libs.hilt.compiler.work)
 
-    // Coil
+    // Coil (صور + فيديو + GIF + WebP)
     implementation(libs.coil.compose)
     implementation(libs.coil.video)
+    implementation(libs.coil.gif)
 
     // FFmpegKit
     implementation(libs.ffmpeg.kit.full)

@@ -26,7 +26,8 @@ fun SettingsScreen(
     onOpenHowTo: () -> Unit,
     onOpenConverter: () -> Unit,
     onOpenFileManager: () -> Unit,
-    onOpenDeviceTools: () -> Unit
+    onOpenDeviceTools: () -> Unit,
+    onOpenGifViewer: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier.fillMaxSize().background(NetflixBlack).verticalScroll(rememberScrollState())
@@ -59,7 +60,7 @@ fun SettingsScreen(
             SettingsItem(Icons.Default.Refresh, "إعادة مسح الملفات", "مسح الجهاز بحثاً عن ملفات جديدة") {}
             SettingsItem(Icons.Default.Delete, "سلة المحذوفات", "استعادة أو حذف الملفات المحذوفة", onClick = onOpenTrash)
             SettingsItem(Icons.Default.FolderOpen, "مدير الملفات", onClick = onOpenFileManager)
-            SettingsItem(Icons.Default.FindReplace, "كاشف التكرار", "اعثر على الفيديوهات المكررة") {}
+            SettingsItem(Icons.Default.FindReplace, "كاشف التكرار", "اعثر على الفيديوهات المكررة", onClick = onOpenDeviceTools)
             SettingsItem(Icons.Default.Schedule, "جدولة الحذف", "احذف ملفات تلقائياً بعد 30 يوم") {}
         }
 
@@ -67,7 +68,7 @@ fun SettingsScreen(
         SettingsSection(title = "الأدوات") {
             SettingsItem(Icons.Default.Transform, "محول الصيغ الشامل", "+400 صيغة", onClick = onOpenConverter)
             SettingsItem(Icons.Default.Speed, "اختبار أداء الجهاز", "تحقق من قدرة جهازك على تشغيل 4K", onClick = onOpenDeviceTools)
-            SettingsItem(Icons.Default.Photo, "مشغل الصور والـ GIF", "عرض الصور والـ GIF المتحركة") {}
+            SettingsItem(Icons.Default.Photo, "مشغل الصور والـ GIF", "عرض الصور والـ GIF المتحركة", onClick = onOpenGifViewer)
         }
 
         // ==================== قسم الواجهة ====================

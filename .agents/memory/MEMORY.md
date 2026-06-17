@@ -1,2 +1,3 @@
 - [OfflineFlix Android project](offlineflix.md) — Native Android Kotlin/Compose/Hilt/Room/ExoPlayer/FFmpegKit app at OfflineFlix/, all stubs resolved.
 - [OfflineFlix build error patterns](offlineflix-build-errors.md) — 3 compilation errors fixed; lint/dependency config pattern for this project.
+- [OfflineFlix features completed](offlineflix-features.md) — All 4 phases done: SRT/ASS/VTT subtitles real, Duplicate Finder, PixelCopy screenshot, screen rotate, GIF/WebP viewer, sleep timer modes, 57 Kotlin files total.

@@ -150,4 +150,8 @@ interface VideoDao {
 
     @Query("SELECT * FROM videos WHERE isDeleted = 0 ORDER BY dateAdded DESC LIMIT 10")
     fun getRecentVideos(): Flow<List<VideoEntity>>
+
+    /** استعلام لمرة واحدة (suspend) للمسح الكامل - يستخدمه كاشف التكرار */
+    @Query("SELECT * FROM videos WHERE isDeleted = 0 ORDER BY size DESC")
+    suspend fun getAllVideosOnce(): List<VideoEntity>
 }
