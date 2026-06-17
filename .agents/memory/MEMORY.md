@@ -1,0 +1,1 @@
+- [OfflineFlix Android project](offlineflix.md) — Native Android Kotlin/Compose/Hilt/Room/ExoPlayer/FFmpegKit app at OfflineFlix/, all stubs resolved.

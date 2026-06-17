@@ -3,6 +3,9 @@ package com.offlineflix.player.ui.screens.pdf
 import android.graphics.Color as AColor
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -10,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -109,9 +113,58 @@ fun PdfReaderScreen(
                     }
                 )
 
-                // شريط تصغير الصفحات (Thumbnails)
-                if (uiState.showThumbnails) {
-                    Text("Thumbnails", color = Color.White) // سيُستبدل بشريط فعلي
+                // شريط تصغير الصفحات السريع (Thumbnails)
+                if (uiState.showThumbnails && uiState.pageCount > 0) {
+                    val listState = rememberLazyListState()
+                    // التمرير التلقائي للصفحة الحالية
+                    LaunchedEffect(uiState.currentPage) {
+                        listState.animateScrollToItem(
+                            index = uiState.currentPage.coerceIn(0, uiState.pageCount - 1)
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .background(Color.Black.copy(alpha = 0.75f))
+                            .padding(vertical = 8.dp)
+                    ) {
+                        LazyRow(
+                            state = listState,
+                            contentPadding = PaddingValues(horizontal = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            itemsIndexed(List(uiState.pageCount) { it }) { index, _ ->
+                                val isActive = index == uiState.currentPage
+                                Box(
+                                    modifier = Modifier
+                                        .size(width = 48.dp, height = 64.dp)
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(
+                                            if (isActive) NetflixRed
+                                            else Color(0xFF3A3A3A)
+                                        )
+                                        .border(
+                                            width = if (isActive) 2.dp else 0.5.dp,
+                                            color = if (isActive) NetflixRed else Color.Gray,
+                                            shape = RoundedCornerShape(4.dp)
+                                        )
+                                        .clickable {
+                                            pdfViewRef?.jumpTo(index, true)
+                                            viewModel.onPageChanged(index)
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "${index + 1}",
+                                        color = if (isActive) Color.White else Color.White.copy(alpha = 0.7f),
+                                        fontSize = if (isActive) 13.sp else 11.sp,
+                                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             } else {
                 Box(Modifier.fillMaxSize(), Alignment.Center) {

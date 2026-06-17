@@ -28,7 +28,49 @@ data class VideoEditorUiState(
     val processingStatus: String = "",
     val remainingTime: String = "",
     val selectedFilter: String = "",
-    val outputPath: String = ""
+    val outputPath: String = "",
+
+    // ==================== أعلام الحوارات ====================
+    /** هل يظهر حوار القص */
+    val showTrimDialog: Boolean = false,
+    /** هل يظهر حوار الدمج */
+    val showMergeDialog: Boolean = false,
+    /** هل يظهر حوار الإلحاق */
+    val showAppendDialog: Boolean = false,
+    /** هل يظهر حوار الموسيقى */
+    val showMusicPickerDialog: Boolean = false,
+    /** هل يظهر حوار معدل البت */
+    val showBitrateDialog: Boolean = false,
+    /** هل يظهر حوار الدقة */
+    val showResolutionDialog: Boolean = false,
+    /** هل يظهر حوار النص */
+    val showTextDialog: Boolean = false,
+    /** هل يظهر حوار الستيكرز */
+    val showStickerDialog: Boolean = false,
+    /** هل يظهر حوار مولد الميمز */
+    val showMemeMakerDialog: Boolean = false,
+    /** هل يظهر حوار معدل الإطارات */
+    val showFpsDialog: Boolean = false,
+    /** هل يظهر حوار الكودك */
+    val showCodecDialog: Boolean = false,
+
+    // ==================== قيم الحوارات ====================
+    /** نقطة البداية للقص (ms) */
+    val trimStart: Long = 0,
+    /** نقطة النهاية للقص (ms) */
+    val trimEnd: Long = 0,
+    /** معدل البت المختار (kbps) */
+    val selectedBitrate: Int = 2000,
+    /** الدقة المختارة */
+    val selectedResolution: String = "1920x1080",
+    /** معدل الإطارات المختار */
+    val selectedFps: Int = 30,
+    /** الكودك المختار */
+    val selectedCodec: String = "libx264",
+    /** نص يُضاف للفيديو */
+    val overlayText: String = "",
+    /** قائمة الفيديوهات للدمج */
+    val mergeList: List<String> = emptyList()
 )
 
 /**
@@ -104,8 +146,36 @@ class VideoEditorViewModel @Inject constructor(
         return "${dir.absolutePath}/${name}_$suffix.$ext"
     }
 
+    /** فتح حوار القص - يُعيّن trimEnd للمدة الكاملة كنقطة بداية */
     fun openTrimmer() {
-        // سيُفتح حوار القص مع محدد الوقت
+        val dur = currentVideo?.duration ?: 0L
+        _uiState.update {
+            it.copy(
+                showTrimDialog = true,
+                trimStart = 0L,
+                trimEnd = if (dur > 0) dur else 60_000L
+            )
+        }
+    }
+
+    /** إغلاق حوار القص */
+    fun dismissTrimDialog() = _uiState.update { it.copy(showTrimDialog = false) }
+
+    /** تحديث نقطة البداية */
+    fun setTrimStart(ms: Long) = _uiState.update { it.copy(trimStart = ms) }
+
+    /** تحديث نقطة النهاية */
+    fun setTrimEnd(ms: Long) = _uiState.update { it.copy(trimEnd = ms) }
+
+    /** تأكيد القص */
+    fun confirmTrim() {
+        val input = currentVideo?.path ?: return
+        val state = _uiState.value
+        val startSec = state.trimStart / 1000.0
+        val durationSec = (state.trimEnd - state.trimStart) / 1000.0
+        val output = getOutputPath("cut_${state.trimStart / 1000}s-${state.trimEnd / 1000}s")
+        _uiState.update { it.copy(showTrimDialog = false, processingStatus = "قص الفيديو...") }
+        executeFFmpeg("-ss $startSec -i \"$input\" -t $durationSec -c copy \"$output\"")
     }
 
     fun losslessCut() {
@@ -115,8 +185,45 @@ class VideoEditorViewModel @Inject constructor(
         executeFFmpeg("-i \"$input\" -ss 0 -to 60 -c copy \"$output\"")
     }
 
-    fun openMerger() { /* فتح حوار الدمج */ }
-    fun appendVideo() { /* إضافة فيديو للنهاية */ }
+    /** فتح حوار دمج الفيديوهات */
+    fun openMerger() = _uiState.update { it.copy(showMergeDialog = true) }
+    fun dismissMergeDialog() = _uiState.update { it.copy(showMergeDialog = false) }
+
+    /** إضافة فيديو للقائمة */
+    fun addToMergeList(path: String) = _uiState.update {
+        it.copy(mergeList = it.mergeList + path)
+    }
+
+    /** تأكيد دمج قائمة الفيديوهات */
+    fun confirmMerge() {
+        val input = currentVideo?.path ?: return
+        val state = _uiState.value
+        if (state.mergeList.isEmpty()) return
+        val listFile = File(context.cacheDir, "merge_list.txt")
+        val allPaths = listOf(input) + state.mergeList
+        listFile.writeText(allPaths.joinToString("\n") { "file '${it.replace("'", "\\'")}'" })
+        val output = getOutputPath("merged")
+        _uiState.update { it.copy(showMergeDialog = false, processingStatus = "دمج الفيديوهات...") }
+        executeFFmpeg("-f concat -safe 0 -i \"${listFile.absolutePath}\" -c copy \"$output\"") { success ->
+            listFile.delete()
+        }
+    }
+
+    /** فتح حوار إلحاق فيديو للنهاية */
+    fun appendVideo() = _uiState.update { it.copy(showAppendDialog = true) }
+    fun dismissAppendDialog() = _uiState.update { it.copy(showAppendDialog = false) }
+
+    /** تأكيد إلحاق فيديو بالنهاية */
+    fun confirmAppend(appendPath: String) {
+        val input = currentVideo?.path ?: return
+        val listFile = File(context.cacheDir, "append_list.txt")
+        listFile.writeText("file '${input.replace("'", "\\'")}'\nfile '${appendPath.replace("'", "\\'")}'")
+        val output = getOutputPath("appended")
+        _uiState.update { it.copy(showAppendDialog = false, processingStatus = "إلحاق الفيديو...") }
+        executeFFmpeg("-f concat -safe 0 -i \"${listFile.absolutePath}\" -c copy \"$output\"") { success ->
+            listFile.delete()
+        }
+    }
 
     fun extractAudio() {
         val input = currentVideo?.path ?: return
@@ -127,7 +234,21 @@ class VideoEditorViewModel @Inject constructor(
         }
     }
 
-    fun addBackgroundMusic() { /* إضافة موسيقى */ }
+    /** فتح حوار اختيار موسيقى خلفية */
+    fun addBackgroundMusic() = _uiState.update { it.copy(showMusicPickerDialog = true) }
+    fun dismissMusicPickerDialog() = _uiState.update { it.copy(showMusicPickerDialog = false) }
+
+    /** دمج موسيقى خلفية مع الفيديو */
+    fun confirmAddMusic(musicPath: String, originalVolume: Float = 0.5f, musicVolume: Float = 0.5f) {
+        val input = currentVideo?.path ?: return
+        val output = getOutputPath("with_music")
+        _uiState.update { it.copy(showMusicPickerDialog = false, processingStatus = "دمج الموسيقى...") }
+        executeFFmpeg(
+            "-i \"$input\" -i \"$musicPath\" " +
+            "-filter_complex \"[0:a]volume=$originalVolume[a0];[1:a]volume=$musicVolume[a1];[a0][a1]amix=inputs=2[aout]\" " +
+            "-map 0:v -map \"[aout]\" -c:v copy -shortest \"$output\""
+        )
+    }
     fun muteOriginalAudio() {
         val input = currentVideo?.path ?: return
         val output = getOutputPath("muted")
@@ -149,8 +270,30 @@ class VideoEditorViewModel @Inject constructor(
         executeFFmpeg("-i \"$input\" -vcodec libx264 -crf 28 -preset medium -acodec aac -b:a 128k \"$output\"")
     }
 
-    fun changeBitrate() { /* حوار تغيير الـ Bitrate */ }
-    fun changeResolution() { /* حوار تغيير الدقة */ }
+    /** فتح حوار تغيير معدل البت */
+    fun changeBitrate() = _uiState.update { it.copy(showBitrateDialog = true) }
+    fun dismissBitrateDialog() = _uiState.update { it.copy(showBitrateDialog = false) }
+    fun setSelectedBitrate(kbps: Int) = _uiState.update { it.copy(selectedBitrate = kbps) }
+    fun confirmChangeBitrate() {
+        val input = currentVideo?.path ?: return
+        val state = _uiState.value
+        val output = getOutputPath("${state.selectedBitrate}kbps")
+        _uiState.update { it.copy(showBitrateDialog = false, processingStatus = "تغيير معدل البت...") }
+        executeFFmpeg("-i \"$input\" -b:v ${state.selectedBitrate}k -bufsize ${state.selectedBitrate * 2}k -c:a copy \"$output\"")
+    }
+
+    /** فتح حوار تغيير الدقة */
+    fun changeResolution() = _uiState.update { it.copy(showResolutionDialog = true) }
+    fun dismissResolutionDialog() = _uiState.update { it.copy(showResolutionDialog = false) }
+    fun setSelectedResolution(resolution: String) = _uiState.update { it.copy(selectedResolution = resolution) }
+    fun confirmChangeResolution() {
+        val input = currentVideo?.path ?: return
+        val state = _uiState.value
+        val (w, h) = state.selectedResolution.split("x").let { Pair(it[0], it[1]) }
+        val output = getOutputPath("${w}x${h}")
+        _uiState.update { it.copy(showResolutionDialog = false, processingStatus = "تغيير الدقة...") }
+        executeFFmpeg("-i \"$input\" -vf scale=$w:$h -c:a copy \"$output\"")
+    }
 
     fun applySlowMotion() {
         val input = currentVideo?.path ?: return
@@ -204,8 +347,33 @@ class VideoEditorViewModel @Inject constructor(
         executeFFmpeg("-i \"$input\" -vf \"$ffFilter\" -c:a copy \"$output\"")
     }
 
-    fun addText() { /* حوار إضافة نص */ }
-    fun addSticker() { /* حوار إضافة ستيكر */ }
+    /** فتح حوار إضافة نص متحرك */
+    fun addText() = _uiState.update { it.copy(showTextDialog = true) }
+    fun dismissTextDialog() = _uiState.update { it.copy(showTextDialog = false) }
+    fun setOverlayText(text: String) = _uiState.update { it.copy(overlayText = text) }
+    fun confirmAddText(text: String, fontColor: String = "white", fontSize: Int = 36, x: Int = 10, y: Int = 10) {
+        val input = currentVideo?.path ?: return
+        val output = getOutputPath("text")
+        val safeText = text.replace(":", "\\:").replace("'", "\\'")
+        _uiState.update { it.copy(showTextDialog = false, processingStatus = "إضافة النص...") }
+        executeFFmpeg(
+            "-i \"$input\" -vf \"drawtext=text='$safeText':fontcolor=$fontColor:fontsize=$fontSize:x=$x:y=$y:box=1:boxcolor=black@0.5:boxborderw=5\" -c:a copy \"$output\""
+        )
+    }
+
+    /** فتح حوار إضافة ستيكر/صورة فوق الفيديو */
+    fun addSticker() = _uiState.update { it.copy(showStickerDialog = true) }
+    fun dismissStickerDialog() = _uiState.update { it.copy(showStickerDialog = false) }
+    fun confirmAddSticker(stickerPath: String, x: Int = 10, y: Int = 10, scale: Float = 0.2f) {
+        val input = currentVideo?.path ?: return
+        val output = getOutputPath("sticker")
+        _uiState.update { it.copy(showStickerDialog = false, processingStatus = "إضافة الستيكر...") }
+        executeFFmpeg(
+            "-i \"$input\" -i \"$stickerPath\" " +
+            "-filter_complex \"[1:v]scale=iw*$scale:-1[sticker];[0:v][sticker]overlay=$x:$y\" " +
+            "-c:a copy \"$output\""
+        )
+    }
 
     fun exportAsGif() {
         val input = currentVideo?.path ?: return
@@ -213,7 +381,25 @@ class VideoEditorViewModel @Inject constructor(
         executeFFmpeg("-i \"$input\" -vf \"fps=15,scale=480:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse\" \"$output\"")
     }
 
-    fun openMemeMaker() { /* فتح أداة الميم */ }
+    /** فتح أداة صانع الميمز */
+    fun openMemeMaker() = _uiState.update { it.copy(showMemeMakerDialog = true) }
+    fun dismissMemeMakerDialog() = _uiState.update { it.copy(showMemeMakerDialog = false) }
+
+    /** إنشاء ميم من الصورة الحالية مع نص */
+    fun createMeme(captureAtMs: Long, topText: String, bottomText: String) {
+        val input = currentVideo?.path ?: return
+        val output = getOutputPath("meme_${captureAtMs / 1000}s", "jpg")
+        val startSec = captureAtMs / 1000.0
+        val safeTop = topText.replace(":", "\\:").replace("'", "\\'")
+        val safeBot = bottomText.replace(":", "\\:").replace("'", "\\'")
+        _uiState.update { it.copy(showMemeMakerDialog = false, processingStatus = "إنشاء الميم...") }
+        executeFFmpeg(
+            "-ss $startSec -i \"$input\" -vframes 1 " +
+            "-vf \"drawtext=text='$safeTop':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=20:borderw=3:bordercolor=black," +
+            "drawtext=text='$safeBot':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=h-th-20:borderw=3:bordercolor=black\" " +
+            "\"$output\""
+        )
+    }
 
     fun extractFrames() {
         val input = currentVideo?.path ?: return
@@ -222,8 +408,34 @@ class VideoEditorViewModel @Inject constructor(
         executeFFmpeg("-i \"$input\" -vf fps=1 \"${dir.absolutePath}/frame_%04d.jpg\"")
     }
 
-    fun changeFps() { /* حوار تغيير FPS */ }
-    fun changeCodec() { /* حوار تغيير Codec */ }
+    /** فتح حوار تغيير معدل الإطارات */
+    fun changeFps() = _uiState.update { it.copy(showFpsDialog = true) }
+    fun dismissFpsDialog() = _uiState.update { it.copy(showFpsDialog = false) }
+    fun setSelectedFps(fps: Int) = _uiState.update { it.copy(selectedFps = fps) }
+    fun confirmChangeFps() {
+        val input = currentVideo?.path ?: return
+        val state = _uiState.value
+        val output = getOutputPath("${state.selectedFps}fps")
+        _uiState.update { it.copy(showFpsDialog = false, processingStatus = "تغيير معدل الإطارات...") }
+        executeFFmpeg("-i \"$input\" -vf fps=${state.selectedFps} -c:a copy \"$output\"")
+    }
+
+    /** فتح حوار تغيير الكودك */
+    fun changeCodec() = _uiState.update { it.copy(showCodecDialog = true) }
+    fun dismissCodecDialog() = _uiState.update { it.copy(showCodecDialog = false) }
+    fun setSelectedCodec(codec: String) = _uiState.update { it.copy(selectedCodec = codec) }
+    fun confirmChangeCodec() {
+        val input = currentVideo?.path ?: return
+        val state = _uiState.value
+        val ext = when (state.selectedCodec) {
+            "libvpx-vp9" -> "webm"
+            "libaom-av1" -> "mkv"
+            else -> "mp4"
+        }
+        val output = getOutputPath(state.selectedCodec, ext)
+        _uiState.update { it.copy(showCodecDialog = false, processingStatus = "تغيير الكودك...") }
+        executeFFmpeg("-i \"$input\" -vcodec ${state.selectedCodec} -crf 23 -c:a aac \"$output\"")
+    }
 
     fun repairVideo() {
         val input = currentVideo?.path ?: return

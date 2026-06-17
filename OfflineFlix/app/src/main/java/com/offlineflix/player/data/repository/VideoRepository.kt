@@ -255,10 +255,57 @@ class VideoRepository @Inject constructor(
     suspend fun moveToTrash(id: Long) = videoDao.moveToTrash(id, System.currentTimeMillis())
     suspend fun restoreFromTrash(id: Long) = videoDao.restoreFromTrash(id)
 
-    suspend fun findDuplicates(): Map<String, List<VideoEntity>> {
+    /**
+     * كشف الملفات المكررة بالحجم والاسم
+     * يجمع الفيديوهات التي لها نفس الحجم أو نفس الاسم
+     * ويُعيد مجموعات تحتوي على أكثر من نسخة واحدة
+     */
+    suspend fun findDuplicates(): Map<String, List<VideoEntity>> = withContext(Dispatchers.IO) {
         val allPaths = videoDao.getAllPaths()
         val duplicates = mutableMapOf<String, MutableList<VideoEntity>>()
-        // منطق بسيط للتكرار بالاسم
-        return duplicates
+
+        // جلب كل الفيديوهات النشطة
+        val allVideos = mutableListOf<VideoEntity>()
+        for (path in allPaths) {
+            val video = videoDao.getByPath(path)
+            if (video != null && !video.isDeleted) allVideos.add(video)
+        }
+
+        // المجموعة 1: تكرار بالحجم الدقيق (نفس الحجم = نفس الملف غالباً)
+        val bySize = mutableMapOf<Long, MutableList<VideoEntity>>()
+        for (video in allVideos) {
+            if (video.size > 0) {
+                bySize.getOrPut(video.size) { mutableListOf() }.add(video)
+            }
+        }
+        for ((size, group) in bySize) {
+            if (group.size > 1) {
+                duplicates["حجم ${formatSizeKt(size)}"] = group
+            }
+        }
+
+        // المجموعة 2: تكرار بالاسم (بدون امتداد)
+        val byName = mutableMapOf<String, MutableList<VideoEntity>>()
+        for (video in allVideos) {
+            val nameKey = video.name.substringBeforeLast(".").lowercase().trim()
+            if (nameKey.isNotBlank()) {
+                byName.getOrPut(nameKey) { mutableListOf() }.add(video)
+            }
+        }
+        for ((name, group) in byName) {
+            // تجنب الإضافة المزدوجة مع مجموعة الحجم
+            if (group.size > 1 && !duplicates.values.any { it.containsAll(group) }) {
+                duplicates["اسم: $name"] = group
+            }
+        }
+
+        duplicates
+    }
+
+    /** دالة مساعدة لتنسيق الحجم داخل Repository */
+    private fun formatSizeKt(bytes: Long): String = when {
+        bytes >= 1_073_741_824L -> "%.1f GB".format(bytes / 1_073_741_824f)
+        bytes >= 1_048_576L -> "%.1f MB".format(bytes / 1_048_576f)
+        else -> "%.1f KB".format(bytes / 1_024f)
     }
 }

@@ -215,10 +215,57 @@ class MusicViewModel @Inject constructor(
     fun selectTab(tab: MusicTab) = _uiState.update { it.copy(selectedTab = tab) }
     fun openEqualizer() = _uiState.update { it.copy(showEqualizer = true) }
     fun closeEqualizer() = _uiState.update { it.copy(showEqualizer = false) }
-    fun openAlbum(album: String) { /* تصفية بالألبوم */ }
-    fun openArtist(artist: String) { /* تصفية بالفنان */ }
-    fun openFolder(folder: String) { /* تصفية بالمجلد */ }
-    fun openPlaylist(id: Long) { /* فتح قائمة التشغيل */ }
+    /** تصفية وتشغيل أغاني ألبوم معين */
+    fun openAlbum(album: String) {
+        viewModelScope.launch {
+            audioRepository.getTracksByAlbum(album).first().let { tracks ->
+                if (tracks.isNotEmpty()) {
+                    currentPlaylist = tracks
+                    currentIndex = 0
+                    playTrack(tracks.first())
+                }
+            }
+        }
+    }
+
+    /** تصفية وتشغيل أغاني فنان معين */
+    fun openArtist(artist: String) {
+        viewModelScope.launch {
+            audioRepository.getTracksByArtist(artist).first().let { tracks ->
+                if (tracks.isNotEmpty()) {
+                    currentPlaylist = tracks
+                    currentIndex = 0
+                    playTrack(tracks.first())
+                }
+            }
+        }
+    }
+
+    /** تصفية وتشغيل أغاني مجلد معين */
+    fun openFolder(folder: String) {
+        viewModelScope.launch {
+            audioRepository.getTracksByFolder(folder).first().let { tracks ->
+                if (tracks.isNotEmpty()) {
+                    currentPlaylist = tracks
+                    currentIndex = 0
+                    playTrack(tracks.first())
+                }
+            }
+        }
+    }
+
+    /** فتح وتشغيل قائمة تشغيل بالـ ID */
+    fun openPlaylist(id: Long) {
+        viewModelScope.launch {
+            audioRepository.getPlaylistWithTracks(id).first()?.tracks?.let { tracks ->
+                if (tracks.isNotEmpty()) {
+                    currentPlaylist = tracks
+                    currentIndex = 0
+                    playTrack(tracks.first())
+                }
+            }
+        }
+    }
 
     fun shuffleAll() {
         if (currentPlaylist.isNotEmpty()) {
@@ -232,7 +279,11 @@ class MusicViewModel @Inject constructor(
         audioRepository.toggleFavorite(id, !track.isFavorite)
     }
 
-    fun addToPlaylist() { /* فتح حوار إضافة لقائمة تشغيل */ }
+    /** إضافة الأغنية الحالية لقائمة تشغيل */
+    fun addToPlaylist(playlistId: Long) = viewModelScope.launch {
+        val track = _uiState.value.currentTrack ?: return@launch
+        audioRepository.addTrackToPlaylist(playlistId, track.id)
+    }
 
     fun createPlaylist() = viewModelScope.launch {
         audioRepository.createPlaylist("قائمة ${System.currentTimeMillis()}")
