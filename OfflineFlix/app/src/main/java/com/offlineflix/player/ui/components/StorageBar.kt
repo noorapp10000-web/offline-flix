@@ -76,7 +76,7 @@ fun StorageBar() {
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Default.Storage,
+                        imageVector = androidx.compose.material.icons.Icons.Default.Folder,
                         contentDescription = null,
                         tint = barColor,
                         modifier = Modifier.size(14.dp)

@@ -63,8 +63,7 @@ class AudioRepository @Inject constructor(
             MediaStore.Audio.Media.TRACK,
             MediaStore.Audio.Media.YEAR,
             MediaStore.Audio.Media.MIME_TYPE,
-            MediaStore.Audio.Media.COMPOSER,
-            MediaStore.Audio.Media.BUCKET_RELATIVE_PATH
+            MediaStore.Audio.Media.COMPOSER
         )
 
         val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

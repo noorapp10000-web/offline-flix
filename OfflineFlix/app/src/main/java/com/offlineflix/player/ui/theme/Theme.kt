@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 // ==================== ألوان Netflix ====================
 val NetflixRed = Color(0xFFE50914)
@@ -74,8 +75,6 @@ data class Spacing(
     val xl: androidx.compose.ui.unit.Dp = 32.dp,
     val xxl: androidx.compose.ui.unit.Dp = 48.dp
 )
-
-private val androidx.compose.ui.unit.Dp.dp get() = this
 
 /**
  * ثيم OfflineFlix الرئيسي
