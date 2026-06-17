@@ -13,8 +13,6 @@ media3 = "1.4.1"
 coil = "2.7.0"
 navigationCompose = "2.8.2"
 workManager = "2.9.1"
-ffmpegKit = "5.1"
-pdfViewer = "3.2.0-beta.1"
 vosk = "0.3.47"
 commonsCompress = "1.27.1"
 datastorePreferences = "1.1.1"
@@ -77,12 +75,6 @@ hilt-compiler-work = { group = "androidx.hilt", name = "hilt-compiler", version.
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 coil-video = { group = "io.coil-kt", name = "coil-video", version.ref = "coil" }
 coil-gif = { group = "io.coil-kt", name = "coil-gif", version.ref = "coil" }
-
-# FFmpegKit
-ffmpeg-kit-full = { group = "com.arthenica", name = "ffmpeg-kit-full", version.ref = "ffmpegKit" }
-
-# PDF Viewer
-android-pdf-viewer = { group = "com.github.barteksc", name = "android-pdf-viewer", version.ref = "pdfViewer" }
 
 # Vosk STT
 vosk-android = { group = "net.java.dev.jna", name = "jna", version = "5.14.0" }

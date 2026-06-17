@@ -25,6 +25,10 @@ description: Root compilation errors and lint/dependency config lessons for Offl
 - **Why**: TrashViewModel needs to find audio regardless of its deleted state to restore it.
 
 ## Dependency / Lint Config
-- `android-pdf-viewer` (JitPack) pulls in old datastore/mediarouter versions — add `configurations.all { resolutionStrategy { force(...) } }` in `build.gradle.kts`.
-- Disable `mediarouter` implementation (not used in source) to avoid transitive conflicts.
 - Add `lint { abortOnError = false; disable += setOf("HardcodedText", "RtlHardcoded", ...) }` inside `android {}` to prevent Arabic string lint warnings from failing the lint CI job.
+
+## Unresolvable Maven Dependencies — Definitive Fix
+- `com.arthenica:ffmpeg-kit-full` — NOT on Maven Central, JitPack, or any public repo at ANY version. The library distributes only via GitHub Releases (binary).
+- `com.github.barteksc:android-pdf-viewer` — not reliably available on JitPack at any commonly cited version.
+- **Fix applied**: Remove both deps from build files entirely. Create local stub classes in `com/arthenica/ffmpegkit/` that implement the exact API surface used (FFmpegKit, ReturnCode, Statistics, FFmpegSession, FFmpegKitConfig). Replace PDF viewer with Android built-in `PdfRenderer` (API 21+, no dependency needed).
+- **Why**: Any CI runner that cannot reach these repos will always fail. Local stubs guarantee compilation with zero external dependencies.

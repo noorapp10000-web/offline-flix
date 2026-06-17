@@ -1,6 +1,8 @@
 package com.offlineflix.player.ui.screens.pdf
 
-import android.graphics.Color as AColor
+import android.graphics.Bitmap
+import android.graphics.pdf.PdfRenderer
+import android.os.ParcelFileDescriptor
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -15,23 +17,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.github.barteksc.pdfviewer.PDFView
-import com.github.barteksc.pdfviewer.listener.OnLoadCompleteListener
-import com.github.barteksc.pdfviewer.listener.OnPageChangeListener
-import com.github.barteksc.pdfviewer.listener.OnPageErrorListener
-import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle
-import com.github.barteksc.pdfviewer.util.FitPolicy
 import com.offlineflix.player.ui.theme.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
-/**
- * شاشة قارئ PDF الكامل
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PdfReaderScreen(
@@ -40,10 +36,8 @@ fun PdfReaderScreen(
     viewModel: PdfViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var showSearch by remember { mutableStateOf(false) }
-    var showBookmarks by remember { mutableStateOf(false) }
     var isDarkMode by remember { mutableStateOf(false) }
-    var pdfViewRef by remember { mutableStateOf<PDFView?>(null) }
+    var showBookmarks by remember { mutableStateOf(false) }
 
     LaunchedEffect(pdfId) { viewModel.loadPdf(pdfId) }
 
@@ -52,21 +46,29 @@ fun PdfReaderScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(uiState.currentPdf?.name ?: "", color = Color.White, fontSize = 14.sp, maxLines = 1)
+                        Text(
+                            uiState.currentPdf?.name ?: "",
+                            color = Color.White, fontSize = 14.sp, maxLines = 1
+                        )
                         if (uiState.pageCount > 0) {
-                            Text("صفحة ${uiState.currentPage + 1} / ${uiState.pageCount}", color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp)
+                            Text(
+                                "صفحة ${uiState.currentPage + 1} / ${uiState.pageCount}",
+                                color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp
+                            )
                         }
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, null, tint = Color.White) }
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, null, tint = Color.White)
+                    }
                 },
                 actions = {
                     IconButton(onClick = { isDarkMode = !isDarkMode }) {
-                        Icon(if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode, null, tint = Color.White)
-                    }
-                    IconButton(onClick = { showSearch = !showSearch }) {
-                        Icon(Icons.Default.Search, null, tint = Color.White)
+                        Icon(
+                            if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
+                            null, tint = Color.White
+                        )
                     }
                     IconButton(onClick = { showBookmarks = !showBookmarks }) {
                         Icon(Icons.Default.Bookmark, null, tint = Color.White)
@@ -81,91 +83,16 @@ fun PdfReaderScreen(
         containerColor = if (isDarkMode) NetflixBlack else Color(0xFF2B2B2B)
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            if (uiState.currentPdf != null) {
-                val pdfPath = uiState.currentPdf!!.path
-
-                AndroidView(
-                    factory = { ctx ->
-                        PDFView(ctx, null).also { pdfView ->
-                            pdfViewRef = pdfView
-                            pdfView.fromFile(File(pdfPath))
-                                .defaultPage(uiState.currentPdf!!.lastOpenedPage)
-                                .enableSwipe(true)
-                                .swipeHorizontal(false)
-                                .enableDoubletap(true)
-                                .enableAntialiasing(true)
-                                .pageFitPolicy(FitPolicy.WIDTH)
-                                .nightMode(isDarkMode)
-                                .scrollHandle(DefaultScrollHandle(ctx))
-                                .onLoad(OnLoadCompleteListener { nbPages ->
-                                    viewModel.onPdfLoaded(nbPages)
-                                })
-                                .onPageChange(OnPageChangeListener { page, _ ->
-                                    viewModel.onPageChanged(page)
-                                })
-                                .onPageError(OnPageErrorListener { _, _ -> })
-                                .load()
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize(),
-                    update = { pdfView ->
-                        pdfView.isNightMode = isDarkMode
-                    }
+            val pdf = uiState.currentPdf
+            if (pdf != null) {
+                PdfPageView(
+                    pdfPath      = pdf.path,
+                    pageIndex    = uiState.currentPage,
+                    pageCount    = uiState.pageCount,
+                    isDark       = isDarkMode,
+                    onPageLoaded  = { count -> viewModel.onPdfLoaded(count) },
+                    onPageChanged = { page  -> viewModel.onPageChanged(page) }
                 )
-
-                // شريط تصغير الصفحات السريع (Thumbnails)
-                if (uiState.showThumbnails && uiState.pageCount > 0) {
-                    val listState = rememberLazyListState()
-                    // التمرير التلقائي للصفحة الحالية
-                    LaunchedEffect(uiState.currentPage) {
-                        listState.animateScrollToItem(
-                            index = uiState.currentPage.coerceIn(0, uiState.pageCount - 1)
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .background(Color.Black.copy(alpha = 0.75f))
-                            .padding(vertical = 8.dp)
-                    ) {
-                        LazyRow(
-                            state = listState,
-                            contentPadding = PaddingValues(horizontal = 12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            itemsIndexed(List(uiState.pageCount) { it }) { index, _ ->
-                                val isActive = index == uiState.currentPage
-                                Box(
-                                    modifier = Modifier
-                                        .size(width = 48.dp, height = 64.dp)
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(
-                                            if (isActive) NetflixRed
-                                            else Color(0xFF3A3A3A)
-                                        )
-                                        .border(
-                                            width = if (isActive) 2.dp else 0.5.dp,
-                                            color = if (isActive) NetflixRed else Color.Gray,
-                                            shape = RoundedCornerShape(4.dp)
-                                        )
-                                        .clickable {
-                                            pdfViewRef?.jumpTo(index, true)
-                                            viewModel.onPageChanged(index)
-                                        },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "${index + 1}",
-                                        color = if (isActive) Color.White else Color.White.copy(alpha = 0.7f),
-                                        fontSize = if (isActive) 13.sp else 11.sp,
-                                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
             } else {
                 Box(Modifier.fillMaxSize(), Alignment.Center) {
                     CircularProgressIndicator(color = NetflixRed)
@@ -174,27 +101,6 @@ fun PdfReaderScreen(
         }
     }
 
-    // حوار البحث
-    if (showSearch) {
-        AlertDialog(
-            onDismissRequest = { showSearch = false },
-            title = { Text("بحث في الـ PDF", color = Color.White) },
-            containerColor = NetflixDarkGray,
-            text = {
-                OutlinedTextField(
-                    value = uiState.searchQuery,
-                    onValueChange = viewModel::searchInPdf,
-                    label = { Text("اكتب للبحث...") },
-                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White, focusedBorderColor = NetflixRed, unfocusedBorderColor = NetflixMediumGray)
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = { showSearch = false }) { Text("إغلاق", color = NetflixRed) }
-            }
-        )
-    }
-
-    // حوار العلامات المرجعية
     if (showBookmarks) {
         AlertDialog(
             onDismissRequest = { showBookmarks = false },
@@ -202,21 +108,30 @@ fun PdfReaderScreen(
             containerColor = NetflixDarkGray,
             text = {
                 if (uiState.bookmarks.isEmpty()) {
-                    Text("لا توجد علامات مرجعية بعد\nاضغط ➕ لإضافة علامة للصفحة الحالية", color = Color.White.copy(alpha = 0.6f))
+                    Text(
+                        "لا توجد علامات مرجعية بعد\nاضغط ➕ لإضافة علامة للصفحة الحالية",
+                        color = Color.White.copy(alpha = 0.6f)
+                    )
                 } else {
                     Column {
                         uiState.bookmarks.forEach { bookmark ->
                             TextButton(
                                 onClick = {
-                                    pdfViewRef?.jumpTo(bookmark.pageNumber)
+                                    viewModel.onPageChanged(bookmark.pageNumber)
                                     showBookmarks = false
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Row(Modifier.fillMaxWidth()) {
-                                    Icon(Icons.Default.Bookmark, null, tint = NetflixRed, modifier = Modifier.size(16.dp))
+                                    Icon(
+                                        Icons.Default.Bookmark, null,
+                                        tint = NetflixRed, modifier = Modifier.size(16.dp)
+                                    )
                                     Spacer(Modifier.width(8.dp))
-                                    Text("صفحة ${bookmark.pageNumber}: ${bookmark.title}", color = Color.White)
+                                    Text(
+                                        "صفحة ${bookmark.pageNumber}: ${bookmark.title}",
+                                        color = Color.White
+                                    )
                                 }
                             }
                         }
@@ -224,8 +139,153 @@ fun PdfReaderScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showBookmarks = false }) { Text("إغلاق", color = NetflixRed) }
+                TextButton(onClick = { showBookmarks = false }) {
+                    Text("إغلاق", color = NetflixRed)
+                }
             }
         )
+    }
+}
+
+@Composable
+private fun PdfPageView(
+    pdfPath: String,
+    pageIndex: Int,
+    pageCount: Int,
+    isDark: Boolean,
+    onPageLoaded: (Int) -> Unit,
+    onPageChanged: (Int) -> Unit
+) {
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var totalPages by remember { mutableIntStateOf(pageCount) }
+
+    suspend fun renderPage(index: Int): Bitmap? = withContext(Dispatchers.IO) {
+        try {
+            val file = File(pdfPath)
+            if (!file.exists()) return@withContext null
+            val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+            val renderer = PdfRenderer(pfd)
+            if (totalPages == 0) {
+                totalPages = renderer.pageCount
+                onPageLoaded(renderer.pageCount)
+            }
+            val page = renderer.openPage(index.coerceIn(0, renderer.pageCount - 1))
+            val w = page.width * 2
+            val h = page.height * 2
+            val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            bmp.eraseColor(
+                if (isDark) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+            )
+            page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+            page.close()
+            renderer.close()
+            pfd.close()
+            bmp
+        } catch (_: Exception) { null }
+    }
+
+    LaunchedEffect(pdfPath) {
+        bitmap = renderPage(pageIndex)
+    }
+
+    LaunchedEffect(pageIndex, isDark) {
+        bitmap = renderPage(pageIndex)
+    }
+
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+    ) {
+        val bmp = bitmap
+        if (bmp != null) {
+            Image(
+                bitmap = bmp.asImageBitmap(),
+                contentDescription = "PDF صفحة ${pageIndex + 1}",
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = if (totalPages > 1) 72.dp else 0.dp)
+            )
+        } else {
+            Box(
+                modifier = Modifier.fillMaxWidth().height(500.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = NetflixRed)
+            }
+        }
+
+        if (totalPages > 1) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = { if (pageIndex > 0) onPageChanged(pageIndex - 1) },
+                    enabled = pageIndex > 0
+                ) {
+                    Icon(Icons.Default.ChevronLeft, null, tint = Color.White)
+                }
+                Text("${pageIndex + 1} / $totalPages", color = Color.White, fontSize = 14.sp)
+                IconButton(
+                    onClick = { if (pageIndex < totalPages - 1) onPageChanged(pageIndex + 1) },
+                    enabled = pageIndex < totalPages - 1
+                ) {
+                    Icon(Icons.Default.ChevronRight, null, tint = Color.White)
+                }
+            }
+
+            // شريط الصفحات السريع
+            if (totalPages > 1) {
+                val listState = rememberLazyListState()
+                LaunchedEffect(pageIndex) {
+                    listState.animateScrollToItem(pageIndex.coerceIn(0, totalPages - 1))
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.Black.copy(alpha = 0.75f))
+                        .padding(vertical = 8.dp)
+                ) {
+                    LazyRow(
+                        state = listState,
+                        contentPadding = PaddingValues(horizontal = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        itemsIndexed(List(totalPages) { it }) { index, _ ->
+                            val isActive = index == pageIndex
+                            Box(
+                                modifier = Modifier
+                                    .size(width = 48.dp, height = 64.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(if (isActive) NetflixRed else Color(0xFF3A3A3A))
+                                    .border(
+                                        width = if (isActive) 2.dp else 0.5.dp,
+                                        color = if (isActive) NetflixRed else Color.Gray,
+                                        shape = RoundedCornerShape(4.dp)
+                                    )
+                                    .clickable { onPageChanged(index) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "${index + 1}",
+                                    color = if (isActive) Color.White
+                                    else Color.White.copy(alpha = 0.7f),
+                                    fontSize = if (isActive) 13.sp else 11.sp,
+                                    fontWeight = if (isActive) FontWeight.Bold
+                                    else FontWeight.Normal
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

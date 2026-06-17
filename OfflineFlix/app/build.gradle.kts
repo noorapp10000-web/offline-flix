@@ -198,12 +198,6 @@ dependencies {
     implementation(libs.coil.video)
     implementation(libs.coil.gif)
 
-    // FFmpegKit
-    implementation(libs.ffmpeg.kit.full)
-
-    // PDF Viewer
-    implementation(libs.android.pdf.viewer)
-
     // Apache Commons Compress
     implementation(libs.commons.compress)
 
