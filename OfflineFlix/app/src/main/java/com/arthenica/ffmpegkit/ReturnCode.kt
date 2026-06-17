@@ -8,5 +8,4 @@ class ReturnCode(val value: Int) {
         @JvmStatic fun isSuccess(rc: ReturnCode?) = rc?.value == SUCCESS
         @JvmStatic fun isCancel(rc: ReturnCode?)  = rc?.value == CANCEL
     }
-    fun getValue() = value
 }
