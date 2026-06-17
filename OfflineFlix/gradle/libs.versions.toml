@@ -23,6 +23,7 @@ splashscreen = "1.0.1"
 palette = "1.0.0"
 mediarouter = "1.7.0"
 gson = "2.11.0"
+appcompat = "1.7.0"
 
 [libraries]
 # AndroidX Core
@@ -96,6 +97,9 @@ gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 
 # Media Router
 androidx-mediarouter = { group = "androidx.mediarouter", name = "mediarouter", version.ref = "mediarouter" }
+
+# AppCompat (مطلوب لـ Theme.AppCompat في styles.xml)
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

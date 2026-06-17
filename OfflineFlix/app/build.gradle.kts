@@ -150,6 +150,9 @@ configurations.all {
 }
 
 dependencies {
+    // AppCompat (مطلوب لـ Theme.AppCompat في styles.xml)
+    implementation(libs.androidx.appcompat)
+
     // AndroidX Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
