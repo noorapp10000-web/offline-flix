@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- الثيم الرئيسي -->
-    <style name="Theme.OfflineFlix" parent="Theme.Material3.DynamicColors.DayNight">
+    <!-- الثيم الرئيسي — Compose app: ألوان UI تأتي من MaterialTheme في الكود -->
+    <style name="Theme.OfflineFlix" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="colorPrimary">#00C4FF</item>
-        <item name="colorPrimaryVariant">#7B2FFF</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorSecondary">#7B2FFF</item>
-        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#7B2FFF</item>
+        <item name="colorAccent">#00C4FF</item>
         <item name="android:colorBackground">#0D0D1A</item>
-        <item name="colorSurface">#13131F</item>
-        <item name="colorOnSurface">#FFFFFF</item>
         <item name="android:windowBackground">#0D0D1A</item>
         <item name="android:statusBarColor">#00000000</item>
         <item name="android:navigationBarColor">#0D0D1A</item>
