@@ -79,6 +79,10 @@ interface AudioDao {
     @Query("SELECT path FROM audio_tracks WHERE isDeleted = 0")
     suspend fun getAllPaths(): List<String>
 
+    /** البحث بالمسار بغض النظر عن حالة الحذف (للاستعادة من السلة) */
+    @Query("SELECT * FROM audio_tracks WHERE path = :path LIMIT 1")
+    suspend fun getByPathAny(path: String): AudioEntity?
+
     /** استعادة الصوت من سلة المحذوفات */
     @Query("UPDATE audio_tracks SET isDeleted = 0 WHERE id = :id")
     suspend fun restoreFromTrash(id: Long)

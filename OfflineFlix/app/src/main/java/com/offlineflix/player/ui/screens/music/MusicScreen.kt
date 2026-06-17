@@ -239,9 +239,7 @@ fun TrackItem(track: AudioEntity, isPlaying: Boolean, onClick: () -> Unit) {
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(6.dp)),
                 contentScale = ContentScale.Crop,
-                error = androidx.compose.painter.Painter::let {
-                    null
-                }
+                error = null
             )
             if (track.albumArtPath.isEmpty()) {
                 Box(

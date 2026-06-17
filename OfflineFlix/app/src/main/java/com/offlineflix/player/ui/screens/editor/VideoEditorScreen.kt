@@ -123,7 +123,7 @@ fun VideoEditorScreen(
                 EditorToolButton(Icons.Default.AspectRatio, "تغيير الدقة") { viewModel.changeResolution() }
             }
             EditorSection(title = "الحركة والتأثيرات") {
-                EditorToolButton(Icons.Default.SlowMotion_24fps, "Slow Motion") { viewModel.applySlowMotion() }
+                EditorToolButton(Icons.Default.SlowMotionVideo, "Slow Motion") { viewModel.applySlowMotion() }
                 EditorToolButton(Icons.Default.FastForward, "Fast Motion") { viewModel.applyFastMotion() }
                 EditorToolButton(Icons.Default.Replay, "عكس الفيديو (Reverse)") { viewModel.reverseVideo() }
                 EditorToolButton(Icons.Default.RotateRight, "تدوير 90/180/270") { viewModel.rotateVideo() }

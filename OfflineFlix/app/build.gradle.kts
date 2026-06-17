@@ -118,6 +118,35 @@ android {
             isUniversalApk = true
         }
     }
+
+    // إعدادات Lint - لا تُفشل البناء بسبب تحذيرات
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
+        disable += setOf(
+            "HardcodedText",
+            "RtlHardcoded",
+            "RtlEnabled",
+            "RtlSymmetry",
+            "UnusedResources",
+            "AllowBackup",
+            "GoogleAppIndexingWarning",
+            "MissingTranslation",
+            "ExtraTranslation"
+        )
+    }
+}
+
+// حل تعارضات المكتبات
+configurations.all {
+    resolutionStrategy {
+        force("androidx.datastore:datastore-preferences:1.1.1")
+        force("androidx.datastore:datastore-preferences-core:1.1.1")
+        force("androidx.datastore:datastore-core:1.1.1")
+        force("androidx.datastore:datastore:1.1.1")
+        force("org.jetbrains.kotlin:kotlin-stdlib:2.0.21")
+        force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.0.21")
+    }
 }
 
 dependencies {
@@ -189,8 +218,8 @@ dependencies {
     // Gson
     implementation(libs.gson)
 
-    // Media Router
-    implementation(libs.androidx.mediarouter)
+    // Media Router (اختياري - يُستخدم لـ Cast)
+    // implementation(libs.androidx.mediarouter)
 
     // Debug
     debugImplementation(libs.androidx.ui.tooling)

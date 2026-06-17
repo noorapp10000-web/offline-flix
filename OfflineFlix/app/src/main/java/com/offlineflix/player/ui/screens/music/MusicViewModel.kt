@@ -279,8 +279,20 @@ class MusicViewModel @Inject constructor(
         audioRepository.toggleFavorite(id, !track.isFavorite)
     }
 
-    /** إضافة الأغنية الحالية لقائمة تشغيل */
-    fun addToPlaylist(playlistId: Long) = viewModelScope.launch {
+    /** فتح نافذة إضافة الأغنية لقائمة تشغيل - يُضاف للقائمة الأولى المتاحة */
+    fun addToPlaylist() = viewModelScope.launch {
+        val track = _uiState.value.currentTrack ?: return@launch
+        val playlists = _uiState.value.playlists
+        if (playlists.isNotEmpty()) {
+            audioRepository.addTrackToPlaylist(playlists.first().id, track.id)
+        } else {
+            val newId = audioRepository.createPlaylist("المفضلة")
+            audioRepository.addTrackToPlaylist(newId, track.id)
+        }
+    }
+
+    /** إضافة الأغنية لقائمة تشغيل محددة بالـ ID */
+    fun addToPlaylistById(playlistId: Long) = viewModelScope.launch {
         val track = _uiState.value.currentTrack ?: return@launch
         audioRepository.addTrackToPlaylist(playlistId, track.id)
     }

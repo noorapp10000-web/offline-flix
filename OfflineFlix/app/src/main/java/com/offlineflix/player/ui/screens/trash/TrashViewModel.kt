@@ -71,8 +71,8 @@ class TrashViewModel @Inject constructor(
                     }
                 }
                 ext in AUDIO_EXTENSIONS -> {
-                    // بحث عن الصوت في قاعدة البيانات بالمسار ثم استعادته
-                    val audio = audioDao.getByPath(item.originalPath)
+                    // بحث عن الصوت في قاعدة البيانات بالمسار ثم استعادته (بغض النظر عن isDeleted)
+                    val audio = audioDao.getByPathAny(item.originalPath)
                     if (audio != null) {
                         audioDao.restoreFromTrash(audio.id)
                     }
@@ -103,7 +103,7 @@ class TrashViewModel @Inject constructor(
                     if (video != null) videoDao.delete(video)
                 }
                 ext in AUDIO_EXTENSIONS -> {
-                    val audio = audioDao.getByPath(item.originalPath)
+                    val audio = audioDao.getByPathAny(item.originalPath)
                     if (audio != null) audioDao.delete(audio)
                 }
             }
